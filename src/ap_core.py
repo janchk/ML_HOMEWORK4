@@ -12,6 +12,7 @@ class Ap:
         self.r = None
         self.labels = None
         self.shape = None
+        self.clust_loc = None
         pass
 
     def fit(self, M: sparse.csr_matrix, iters_num):
@@ -27,11 +28,16 @@ class Ap:
         self.__get_clusters()
 
     def predict(self, checkins: pd.DataFrame, user_id=None, n=10):
-        checkins["cluster"] = self.labels[checkins.user_id]
+        if self.clust_loc is None:
+            checkins["cluster"] = self.labels[checkins.user_id]
+            self.clust_loc = checkins.groupby(by="cluster")["location_id"].value_counts()
 
         if user_id:
             target_cluster = self.labels[user_id]
-            topn_locs_clusterwise = list(checkins[checkins.cluster == target_cluster]["location_id"].value_counts().index[:n])
+            try:
+                topn_locs_clusterwise = list(self.clust_loc[target_cluster][:n].index)
+            except IndexError:
+                return list(checkins["location_id"].value_counts().index[:n])
             topn_locs = topn_locs_clusterwise
         else:
             topn_locs = list(checkins["location_id"].value_counts().index[:n])

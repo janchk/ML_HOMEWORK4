@@ -23,7 +23,7 @@ def load_checkins(path):
     checkins_df = pd.read_csv(path, sep="\t", header=None)[[0, 4]]
     checkins_df.columns = ["user_id", "location_id"]
 
-    train, test = train_test_split(checkins_df, test_size=0.1, shuffle=True)
+    train, test = train_test_split(checkins_df, test_size=0.01, shuffle=True)
 
     return train, test
 
