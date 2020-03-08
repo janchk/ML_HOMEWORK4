@@ -13,18 +13,22 @@ class Ap:
         self.labels = None
         self.shape = None
         self.clust_loc = None
-        pass
+        self.iters = None
 
     def fit(self, M: sparse.csr_matrix, iters_num):
         self.iters = iters_num
         self.s = M
         self.shape = M.shape
 
-        self.a = sparse.lil_matrix(self.shape)
+        self.a = sparse.csr_matrix(self.shape)
+        """We use list of lists initialization for self.r coz we change 
+        value of responsibility matrix thus we make a change to sparse structure
+        which is expensive operation to do with csr matrix"""
         self.r = sparse.lil_matrix(self.shape)
+
         for i in tqdm(range(self.iters)):
-            self.__get_responsibility()
-            self.__get_availability()
+            self.__update_responsibility()
+            self.__update_availability()
         self.__get_clusters()
 
     def predict(self, checkins: pd.DataFrame, user_id=None, n=10):
@@ -63,14 +67,13 @@ class Ap:
 
         pass
 
-    def __get_availability(self):
+    def __update_availability(self):
         self_resp = np.ravel(self.r.diagonal())
         _a_temp = sparse.lil_matrix(self.r.shape)
         _a = None
         _r = self.r.copy()
         a_diag = np.zeros(self.r.shape[0])
 
-        _r = _r.tocsr()
         _r_diag = np.ravel(_r.diagonal())
         _r.setdiag(0)
         _r_pos = _r.maximum(0).tocoo()  # getting positive mat
@@ -87,7 +90,7 @@ class Ap:
         self.a = _a_temp.minimum(0).tocoo()
         self.a.setdiag(a_diag)
 
-    def __get_responsibility(self):
+    def __update_responsibility(self):
         """
         Filling "self.r value"
         :return:
@@ -104,7 +107,7 @@ class Ap:
         rem_s_max = np.ravel(_m_as_2.max(-1).todense())
         # rem_s_max = np.max(np.ravel(_m_as_2)) # remaining max
 
-        _m_as = _m_as.tocoo()
+        _m_as = _m_as.tocoo() # we need this transformation to be able to iterate over rows and columns
 
         for row, col, data in zip(_m_as.row, _m_as.col, _m_as.data):
             self.r[row, col] = data - rem_s_max[row] if data == s_max[row] else data - s_max[row]

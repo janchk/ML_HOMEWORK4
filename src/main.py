@@ -15,7 +15,7 @@ def get_intersect(gt, pred):
 
 ap = Ap()
 if __name__ == "__main__":
-    ap.fit(csr_ds, 1)
+    ap.fit(csr_ds, 3)
     topn_base = ap.predict(checkins_train)
     cluster_prec = 0
     base_prec = 0
