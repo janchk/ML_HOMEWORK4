@@ -48,6 +48,9 @@ class Ap:
 
         return topn_locs
 
+    def get_clusters(self):
+        return self.clusters
+
     def __get_clusters(self):
         instances = (np.ravel(self.a.diagonal()) + np.ravel(self.r.diagonal())) > 0
         exemplars_idx = np.flatnonzero(instances)
@@ -57,7 +60,7 @@ class Ap:
         clusters = [np.where(labels == i)[0] for i in range(n_clusters)]
         self.labels = labels
         self.clusters = clusters
-        return clusters, instances
+
 
     def _get_similarity(self):
         """
